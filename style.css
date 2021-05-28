@@ -1,0 +1,80 @@
+body {
+    text-align: center;
+}
+
+#content {
+    display: inline-block;
+}
+
+#inputContainer {
+    float: left;
+}
+
+#outputContainer {
+    float: left;
+    margin-left: 100px;
+}
+
+#solveBtn {
+    margin-top: 20px;
+    margin-right: 100px;
+}
+
+/* make sudoku grid */
+table {
+    border-collapse: collapse;
+}
+
+td {
+    height: 35px;
+    width: 35px;
+    border: 1px solid #000;
+}
+
+tr:nth-child(1) {
+    border-top: 3px solid #000;
+}
+
+tr:nth-child(3n) {
+    border-bottom: 3px solid #000;
+}
+
+td:nth-child(1) {
+    border-left: 3px solid #000;
+}
+
+td:nth-child(3n) {
+    border-right: 3px solid #000;
+}
+
+.input,
+.output {
+    margin: 0;
+    padding-left: 10px;
+    padding-top: 3px;
+    height: 35px;
+    width: 35px;
+    box-sizing: border-box;
+    border-width: 0;
+    outline: none;
+    background-color: #FFF;
+    font-size: 25px;
+}
+
+.input,
+.highlight {
+    color: #ff0000;
+}
+
+/* hide input arrows */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+}
