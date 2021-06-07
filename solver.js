@@ -6,15 +6,15 @@ let grid = makeEmptyGrid();
 // initialize page
 $(window).on('load', () => {
     // bind functions to buttons
-    $('#solveBtn').on('click', solve);
-    $('#resetBtn').on('click', reset);
+    $('#solveBtn').on('click', solveBtnHandler);
+    $('#resetBtn').on('click', resetBtnHandler);
 
-    // create input grid
+    // create input sudoku
     for (let i = 0; i < ROWS; i++) {
         let row = $('<tr></tr>');
         $('#inputSudoku').append(row);
         for (let j = 0; j < COLS; j++) {
-            let input = $('<td><input type="number" class="input" min="1" max="9"/></td>');
+            let input = $('<td><input type="number" class="input highlight" min="1" max="9"/></td>');
             input.on("input", e => {
                 $(e.target).val(validateInput($(e.target).val()));
             });
@@ -22,21 +22,21 @@ $(window).on('load', () => {
         }
     }
 
-    // create output grid
+    // create output sudoku
     for (let i = 0; i < ROWS; i++) {
         let row = $('<tr></tr>');
         $('#outputSudoku').append(row);
         for (let j = 0; j < COLS; j++) {
-            row.append('<td><input type="number" class="output" min="1" max="9" disabled/></td>');
+            row.append('<td><input type="number" class="output" disabled/></td>');
         }
     }
 });
 
 // user interface functions
-function validateInput(n) {
+function validateInput(value) {
     validNumbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
-    if (validNumbers.includes(n))
-        return n;
+    if (validNumbers.includes(value))
+        return value;
 
     return '';
 }
@@ -50,15 +50,16 @@ function readInput() {
             grid[i][j] = parseInt($(inputs[index]).val()) || '';
         }
     }
-    console.table(grid);
 }
 
-function writeOutput(outputs) {
+function writeOutput() {
+    let outputs = $(".output");
+    outputs.each((_, spot) => $(spot).removeClass("highlight"));
+
     for (let i = 0; i < ROWS; i++) {
         for (let j = 0; j < COLS; j++) {
             let index = i * COLS + j;
             $(outputs[index]).val(grid[i][j]);
-            $(outputs[index]).removeClass("highlight");
             if ($(outputs[index]).val() === $($(".input")[index]).val()) {
                 $(outputs[index]).addClass("highlight");
             }
@@ -77,72 +78,80 @@ function makeEmptyGrid() {
     return arr;
 }
 
-function reset() {
+function resetBtnHandler() {
     grid = makeEmptyGrid();
-    writeOutput($(".output"));
-    writeOutput($(".input"));
+    $(".input, .output").each((_, spot) => $(spot).val(''));
 }
 
-function solve() {
+function solveBtnHandler() {
     readInput();
-    getSolution();
-    writeOutput($(".output"));
+    console.table(grid);
+    solve();
+    writeOutput();
     console.table(grid);
 }
 
 // solver functions
-function getSolution() {
-    solveRec(getEmptyField(), 1);
+function solve() {
+    // validate user input
+    for (let i = 0; i < ROWS; i++) {
+        for (let j = 0; j < COLS; j++) {
+            if (grid[i][j] !== '' && !isValidEntry(i, j))
+                return;
+        }
+    }
+    // solve recursively
+    solveRec(getEmptySpot(), 1);
 }
 
-function solveRec(current, n) {
+function solveRec(current, value) {
     if (!current)
         return true;
 
-    if (n > 9)
+    if (value > 9)
         return false;
 
-    grid[current.j][current.i] = n;
-    next = getEmptyField();
+    grid[current.i][current.j] = value;
+    next = getEmptySpot();
 
-    if (!isValidEntry(current.j, current.i) || !solveRec(next, 1)) {
-        grid[current.j][current.i] = '';
-        return solveRec(current, n + 1);
+    if (!isValidEntry(current.i, current.j) || !solveRec(next, 1)) {
+        grid[current.i][current.j] = '';
+        return solveRec(current, value + 1);
     }
 
     return true;
 }
 
-function isValidEntry(x, y) {
-    let entry = grid[x][y];
+function isValidEntry(row, column) {
+    let entry = grid[row][column];
 
     // check row
-    for (let i = 0; i < ROWS; i++) {
-        if (i === y)
+    for (let j = 0; j < COLS; j++) {
+        if (j === column)
             continue;
 
-        if (grid[x][i] === entry)
+        if (grid[row][j] === entry)
             return false;
     }
 
     // check column
-    for (let i = 0; i < COLS; i++) {
-        if (i === x)
+    for (let i = 0; i < ROWS; i++) {
+        if (i === row)
             continue;
 
-        if (grid[i][y] === entry)
+        if (grid[i][column] === entry)
             return false;
     }
 
     // check block
-    let blockX = Math.floor(x / 3) * 3;
-    let blockY = Math.floor(y / 3) * 3;
+    let blockRow = Math.floor(row / 3) * 3;
+    let blockCol = Math.floor(column / 3) * 3;
     for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
-            if (blockX + j === x && blockY + i === y)
+            if (blockRow + i === row && blockCol + j === column)
                 continue;
 
-            if (grid[blockX + j][blockY + i] === entry)
+            if (grid[blockRow + i][blockCol + j] === entry)
                 return false;
         }
     }
@@ -150,10 +159,10 @@ function isValidEntry(x, y) {
     return true;
 }
 
-function getEmptyField() {
+function getEmptySpot() {
     for (let i = 0; i < ROWS; i++) {
         for (let j = 0; j < COLS; j++) {
-            if (grid[j][i] === '')
+            if (grid[i][j] === '')
                 return {
                     i,
                     j
@@ -193,7 +202,7 @@ function test() {
     isSolved = true;
     for (let i = 0; i < ROWS; i++) {
         for (let j = 0; j < COLS; j++) {
-            if (grid[j][i] !== solution[j][i]) {
+            if (grid[i][j] !== solution[i][j]) {
                 isSolved = false;
                 break;
             }
@@ -204,7 +213,3 @@ function test() {
     console.table(solution);
     console.log("Sudoku solved?: " + isSolved);
 }
-
-// TODO: place input inside table to adapt strokewidth
-// TODO: copy empty table next to user input
-// TODO: validate user input before analysing
